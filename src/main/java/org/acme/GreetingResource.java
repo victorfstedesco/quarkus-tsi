@@ -3,8 +3,8 @@ package org.acme;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
-import java.awt.*;
 import java.util.List;
 
 @Path("/hello")
@@ -26,16 +26,22 @@ public class GreetingResource {
     @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public MyEntity GetById(@PathParam("id") int id){
-        return MyEntity.findById(id);
-    }
+    public Response GetById(@PathParam("id") int id){
+        var entity = MyEntity.findById(id);
+        if(entity == null){
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        return Response.ok(entity).build();
 
+
+    }
 
     @POST
     @Transactional
     @Consumes(MediaType.APPLICATION_JSON)
-    public void insertEntity(MyEntity entity){
+    public Response insertEntity(MyEntity entity){
         MyEntity.persist(entity);
+        return Response.status(Response.Status.CREATED).entity(entity).build();
     }
 
     @DELETE
@@ -45,5 +51,13 @@ public class GreetingResource {
         MyEntity.deleteById(id);
     }
 
+    @PUT
+    @Path("{id}")
+    @Transactional
+    public void update(@PathParam("id") int id, MyEntity entity){
+        MyEntity oldEntity = MyEntity.findById(id);
+        oldEntity.field = entity.field;
+        MyEntity.persist(entity);
+    }
 
 }
